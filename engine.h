@@ -31,7 +31,7 @@ private:
     Patterns patterns_;
     Cache cache_;
 
-    float NegaMax(Board* node, int depth, int max_depth, float alpha, float beta, float color,
+    float NegaMax(Board* node, int depth, float alpha, float beta, float color,
                   int distance, Cell* best_move);
     float Evaluate(const Board* board);
 

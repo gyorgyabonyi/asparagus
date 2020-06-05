@@ -29,6 +29,7 @@ public:
 
     constexpr int width() const { return width_; }
     constexpr int height() const { return height_; }
+    constexpr uint64_t hash() const { return hash_; }
     constexpr bool empty() const { return !hash_; }
     constexpr Stone stone(Cell cell) const { return stones_[cell]; }
     constexpr const Stone* cell(Cell cell) const { return stones_ + cell; }

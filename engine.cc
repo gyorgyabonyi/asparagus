@@ -29,23 +29,41 @@ Cell Engine::GetBestMove(Board* board) {
     if (board->empty()) {
         best_move = MakeCell(board->width() / 2, board->height() / 2);
     } else {
-        for (int max_depth = 1; max_depth < config_.max_depth(); max_depth++) {
-            NegaMax(board, 0, max_depth, -kInfinity, kInfinity, 1.0f, 2, &best_move);
+        for (int depth = 1; depth <= config_.max_depth(); depth++) {
+            NegaMax(board, depth, -kInfinity, kInfinity, 1.0f, 2, &best_move);
         }
     }
     return best_move;
 }
 
-float Engine::NegaMax(Board* node, int depth, int max_depth, float alpha, float beta, float color,
-                      int distance, Cell* best_move) {
-    if (depth == max_depth) {
+float Engine::NegaMax(Board* node, int depth, float alpha, float beta, float color, int distance,
+                      Cell* best_move) {
+    const float original_alpha = alpha;
+    bool found;
+    Cache::Entry* entry = cache_.Find(node->hash(), &found);
+    if (found && entry->depth() >= depth) {
+        uint8_t type = entry->type();
+        if (type == Cache::Entry::kExact) {
+            return entry->value();
+        } else if (type == Cache::Entry::kLowerBound) {
+            alpha = std::max(alpha, entry->value());
+        } else if (type == Cache::Entry::kUpperBound) {
+            beta = std::min(beta, entry->value());
+        }
+        if (alpha >= beta) {
+            return entry->value();
+        }
+    }
+
+    if (depth == 0) {
         return color * Evaluate(node);
     }
+
     CellSet moves;
     node->GetPossibleMoves(distance, &moves);
     // TODO(gyorgy): order moves.
     float best_value = -kInfinity;
-    Cell local_best;
+    Cell local_best_move = MakeCell(0, 0);
     const Stone stone = color > 0.0f ? kEngine : kPlayer;
     for (auto move : moves) {
         float value;
@@ -53,7 +71,7 @@ float Engine::NegaMax(Board* node, int depth, int max_depth, float alpha, float 
             value = -color * kWinValue;
         } else {
             node->Set(move, stone);
-            value = -NegaMax(node, depth + 1, max_depth, -beta, -alpha, -color, 1, &local_best);
+            value = -NegaMax(node, depth - 1, -beta, -alpha, -color, 1, &local_best_move);
             node->Set(move, kEmpty);
         }
         if (value > best_value) {
@@ -67,6 +85,16 @@ float Engine::NegaMax(Board* node, int depth, int max_depth, float alpha, float 
             break;
         }
     }
+
+    uint8_t type;
+    if (best_value <= original_alpha) {
+        type = Cache::Entry::kUpperBound;
+    } else if (best_value >= beta) {
+        type = Cache::Entry::kLowerBound;
+    } else {
+        type = Cache::Entry::kExact;
+    }
+    entry->Store(type, depth, best_value, local_best_move);
     return best_value;
 }
 

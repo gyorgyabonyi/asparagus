@@ -19,12 +19,21 @@ public:
 
         Entry() = default;
 
-        constexpr int type() const { return type_; }
+        constexpr uint8_t type() const { return type_; }
+        constexpr uint8_t depth() const { return depth_; }
+        constexpr float value() const { return value_; }
+
+        void Store(uint8_t type, uint8_t depth, float value, Cell best_move) {
+            type_ = type & 0x3u;
+            depth_ = depth;
+            value_ = value;
+            best_move_ = best_move;
+        }
 
     private:
         uint64_t hash_;
         uint32_t type_       : 2;
-        uint32_t depth_      : 10;
+        uint32_t depth_      : 8;
         uint32_t best_move_  : 10;
         float value_;
 
