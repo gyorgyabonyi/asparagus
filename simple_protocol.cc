@@ -4,7 +4,9 @@
 
 #include <iomanip>
 
+#include "board.h"
 #include "config.h"
+#include "controller.h"
 
 namespace asparagus {
 
@@ -29,9 +31,9 @@ static int ReadTokens(std::istream& in, std::vector<std::string>* tokens) {
     return tokens->size();
 }
 
-SimpleProtocol::SimpleProtocol(Config *config)
+SimpleProtocol::SimpleProtocol(Config *config, Controller* controller)
     :   config_(config),
-        engine_(*config, &statistics_) {}
+        controller_(controller) {}
 
 bool SimpleProtocol::HandleRequest(std::istream& request, std::ostream& response) {
     std::vector<std::string> tokens;
@@ -54,8 +56,6 @@ bool SimpleProtocol::HandleRequest(std::istream& request, std::ostream& response
             HandleBoard(tokens, response);
         } else if (command == "print") {
             HandlePrint(response);
-        } else if (command == "stats") {
-            HandleStats(response);
         } else {
             response << "error: unknown command: " << command;
         }
@@ -81,8 +81,7 @@ void SimpleProtocol::HandleStart(const std::vector<std::string>& args, std::ostr
         response << "error: illegal size: " << width << "x" << height;
         return;
     }
-    board_.Initialize(width, height);
-    engine_.Start(width, height);
+    controller_->Start(width, height);
     response << "ok";
 }
 
@@ -94,26 +93,38 @@ void SimpleProtocol::HandleMove(const std::vector<std::string>& args, std::ostre
     const int x = std::stoi(args[0]);
     const int y = std::stoi(args[1]);
     const Cell move = MakeCell(x, y);
-    if (!board_.IsEmptyCell(move)) {
+    if (!controller_->board().IsEmptyCell(move)) {
         response << "error: illegal move: " << x << " " << y;
         return;
     }
-    board_.Set(move, kPlayer);
-    if (board_.IsTerminalMove(move, kPlayer, config_->is_exact_five())) {
-        response << " player won";
-    } else {
-        response << "ok";
+    controller_->PlayerMove(move);
+    switch (controller_->state()) {
+        case Controller::kPlaying:
+            response << "ok";
+            break;
+        case Controller::kWon:
+            response << "player won";
+            break;
+        case Controller::kDraw:
+            response << "draw";
+            break;
+        default:
+            break;
     }
 }
 
 void SimpleProtocol::HandleGo( std::ostream& response) {
-    Cell move = engine_.GetBestMove(board_);
-    if (board_.IsEmptyCell(move)) {
-        board_.Set(move, kEngine);
-    }
+    Cell move = controller_->GetEngineMove();
     response << GetX(move) << " " << GetY(move);
-    if (board_.IsTerminalMove(move, kEngine, config_->is_exact_five())) {
-        response << " engine won";
+    switch (controller_->state()) {
+        case Controller::kWon:
+            response << " engine won";
+            break;
+        case Controller::kDraw:
+            response << " draw";
+            break;
+        default:
+            break;
     }
 }
 
@@ -137,8 +148,8 @@ void SimpleProtocol::HandleBoard(const std::vector<std::string>& args, std::ostr
     const int x = std::stoi(args[0]);
     const int y = std::stoi(args[1]);
     const Cell cell = MakeCell(x, y);
-    if (!board_.IsInside(cell)) {
-        response << "error: illegal cell: " << x << " " << y;
+    if (!controller_->board().IsInside(cell)) {
+        response << "error: invalid cell: " << x << " " << y;
         return;
     }
     Stone stone = kBoundary;
@@ -155,13 +166,14 @@ void SimpleProtocol::HandleBoard(const std::vector<std::string>& args, std::ostr
         response << "error: unknown value " << args[2];
         return;
     }
-    board_.Set(cell, stone);
+    controller_->SetCell(cell, stone);
     response << "ok";
 }
 
 void SimpleProtocol::HandlePrint(std::ostream& response) {
-    const int width = board_.width();
-    const int height = board_.height();
+    const Board& board = controller_->board();
+    const int width = board.width();
+    const int height = board.height();
     response << "   ";
     for (int x = 1; x <= width; x++) {
         int digit = x / 10;
@@ -179,7 +191,7 @@ void SimpleProtocol::HandlePrint(std::ostream& response) {
     for (int y = 1; y <= height; y++) {
         response << std::setw(2) << y << " ";
         for (int x = 1; x <= width; x++) {
-            const Stone stone = board_.stone(MakeCell(x, y));
+            const Stone stone = board.stone(MakeCell(x, y));
             if (stone == kEmpty) {
                 response << "+";
             } else if (stone == kEngine) {
@@ -195,10 +207,6 @@ void SimpleProtocol::HandlePrint(std::ostream& response) {
         }
         response << std::endl;
     }
-}
-
-void SimpleProtocol::HandleStats(std::ostream& response) {
-    statistics_.Print(response);
 }
 
 }  // namespace asparagus

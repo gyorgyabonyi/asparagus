@@ -6,6 +6,8 @@
 #include <istream>
 #include <ostream>
 
+#include "common.h"
+
 namespace asparagus {
 
 class Protocol {
@@ -21,6 +23,8 @@ public:
 
 private:
     bool is_running_;
+
+    DISALLOW_COPY_AND_ASSIGN(Protocol);
 };
 
 }  // namespace asparagus

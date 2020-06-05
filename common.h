@@ -7,6 +7,10 @@
 
 namespace asparagus {
 
+#define DISALLOW_COPY_AND_ASSIGN(clazz) \
+    clazz(const clazz&) = delete;       \
+    clazz& operator =(const clazz&) = delete
+
 using Stone = uint8_t;
 
 constexpr uint8_t kEmpty     = 0x00u;

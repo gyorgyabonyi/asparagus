@@ -6,6 +6,7 @@ namespace asparagus {
 
 Config::Config()
     :   use_gomocup_protocol_(false),
+        cache_size_(1ull * 1024ull * 1024ull * 1024ull),
         is_exact_five_(false),
         max_depth_(5) {}
 

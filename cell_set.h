@@ -13,6 +13,8 @@ class CellSet final {
 public:
     using iterator = std::vector<Cell>::iterator;
 
+    CellSet() = default;
+
     iterator begin() { return cells_.begin(); }
     iterator end() { return cells_.end(); }
 
@@ -22,6 +24,8 @@ public:
 
 private:
     std::vector<Cell> cells_;
+
+    DISALLOW_COPY_AND_ASSIGN(CellSet);
 };
 
 }  // namespace asparagus

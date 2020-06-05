@@ -11,14 +11,13 @@ namespace asparagus {
 
 class Config;
 class Board;
-class Statistics;
 
 class Engine final {
 public:
-    explicit Engine(const Config &config, Statistics* statistics);
+    explicit Engine(const Config &config);
 
-    void Start(int width, int height);
-    Cell GetBestMove(const Board &board);
+    void Start();
+    Cell GetBestMove(Board* board);
 
 private:
     struct Pattern {
@@ -29,13 +28,14 @@ private:
     static const Pattern kPatterns[];
 
     const Config &config_;
-    Statistics* statistics_;
     Patterns patterns_;
     Cache cache_;
 
     float NegaMax(Board* node, int depth, int max_depth, float alpha, float beta, float color,
                   int distance, Cell* best_move);
     float Evaluate(const Board* board);
+
+    DISALLOW_COPY_AND_ASSIGN(Engine);
 };
 
 }  // namespace asparagus

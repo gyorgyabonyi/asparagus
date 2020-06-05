@@ -5,11 +5,18 @@
 
 #include "protocol.h"
 
+#include "common.h"
+
 namespace asparagus {
 
 class GomocupProtocol final : public Protocol {
 public:
+    GomocupProtocol() = default;
+
     bool HandleRequest(std::istream& request, std::ostream& response) override;
+
+private:
+    DISALLOW_COPY_AND_ASSIGN(GomocupProtocol);
 };
 
 }  // namespace asparagus

@@ -25,13 +25,6 @@ Board::Board()
     memset(stones_, 0, kStorageSize);
 }
 
-Board::Board(const Board& board)
-    :   width_(board.width_),
-        height_(board.height_),
-        hash_(board.hash_) {
-    memcpy(stones_, board.stones_, kStorageSize);
-}
-
 void Board::Initialize(int width, int height) {
     width_ = width;
     height_ = height;

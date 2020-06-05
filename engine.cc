@@ -2,45 +2,37 @@
 
 #include "engine.h"
 
-#include <iostream>
-
 #include "board.h"
 #include "cell_set.h"
 #include "config.h"
-#include "statistics.h"
 
 namespace asparagus {
 
 constexpr float kInfinity = std::numeric_limits<float>::infinity();
 constexpr float kWinValue = 1e20f;
 
-Engine::Engine(const Config &config, Statistics* statistics)
+Engine::Engine(const Config &config)
     :   config_(config),
-        statistics_(statistics) {
+        cache_(config.cache_size()) {
     for (const Pattern* pattern = kPatterns; pattern->pattern_; pattern++) {
         patterns_.AddPattern(pattern->pattern_, pattern->value_);
     }
 }
 
-void Engine::Start(int width, int height) {
+void Engine::Start() {
     cache_.Reset();
 }
 
-Cell Engine::GetBestMove(const Board& board) {
-    statistics_->Start();
-    cache_.StartGeneration();
+Cell Engine::GetBestMove(Board* board) {
+    cache_.NewSearch();
     Cell best_move = MakeCell(0, 0);
-    if (board.empty()) {
-        best_move = MakeCell(board.width() / 2, board.height() / 2);
+    if (board->empty()) {
+        best_move = MakeCell(board->width() / 2, board->height() / 2);
     } else {
-        Board node(board);
         for (int max_depth = 1; max_depth < config_.max_depth(); max_depth++) {
-            std::cout << "depth: " << max_depth;
-            NegaMax(&node, 0, max_depth, -kInfinity, kInfinity, 1.0f, 2, &best_move);
-            std::cout << " " << GetX(best_move) << " " << GetY(best_move) << std::endl;
+            NegaMax(board, 0, max_depth, -kInfinity, kInfinity, 1.0f, 2, &best_move);
         }
     }
-    statistics_->Stop();
     return best_move;
 }
 
@@ -56,10 +48,8 @@ float Engine::NegaMax(Board* node, int depth, int max_depth, float alpha, float 
     Cell local_best;
     const Stone stone = color > 0.0f ? kEngine : kPlayer;
     for (auto move : moves) {
-        statistics_->AddNode();
         float value;
         if (node->IsTerminalMove(move, stone, config_.is_exact_five())) {
-            statistics_->AddTerminal();
             value = -color * kWinValue;
         } else {
             node->Set(move, stone);
@@ -74,7 +64,6 @@ float Engine::NegaMax(Board* node, int depth, int max_depth, float alpha, float 
             alpha = best_value;
         }
         if (alpha >= beta) {
-            statistics_->AddCutOff();
             break;
         }
     }
@@ -83,7 +72,6 @@ float Engine::NegaMax(Board* node, int depth, int max_depth, float alpha, float 
 
 float Engine::Evaluate(const Board* board) {
     static int kStrides[] = { Board::kUpRight, Board::kRight, Board::kDownRight, Board::kDown };
-    statistics_->AddEval();
     CellSet cells;
     board->GetCellsToEvaluate(3, &cells);
     float value = 0.0f;

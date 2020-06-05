@@ -26,7 +26,6 @@ public:
     static constexpr int kUpLeft = kUp + kLeft;
 
     Board();
-    Board(const Board& board);
 
     constexpr int width() const { return width_; }
     constexpr int height() const { return height_; }
@@ -48,6 +47,8 @@ private:
     int height_;
     uint64_t hash_;
     Stone stones_[kStride * kStride];
+
+    DISALLOW_COPY_AND_ASSIGN(Board);
 };
 
 }  // namespace asparagus

@@ -23,9 +23,13 @@ private:
 
         Node* children_[4];
         float value_;
+
+    private:
+        DISALLOW_COPY_AND_ASSIGN(Node);
     };
 
     Node root_;
+    DISALLOW_COPY_AND_ASSIGN(Patterns);
 };
 
 }  // namespace asparagus

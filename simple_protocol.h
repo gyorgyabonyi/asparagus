@@ -6,26 +6,22 @@
 #include <string>
 #include <vector>
 
-#include "board.h"
-#include "engine.h"
 #include "protocol.h"
-#include "statistics.h"
 
 namespace asparagus {
 
 class Config;
+class Controller;
 
 class SimpleProtocol final : public Protocol {
 public:
-    explicit SimpleProtocol(Config* config);
+    explicit SimpleProtocol(Config* config, Controller* controller);
 
     bool HandleRequest(std::istream& request, std::ostream& response) override;
 
 private:
     Config* config_;
-    Board board_;
-    Engine engine_;
-    Statistics statistics_;
+    Controller* controller_;
 
     void HandleQuit(std::ostream& response);
     void HandleStart(const std::vector<std::string>& args, std::ostream& response);
@@ -35,7 +31,8 @@ private:
     void HandleGet(const std::vector<std::string>& args, std::ostream& response);
     void HandleBoard(const std::vector<std::string>& args, std::ostream& response);
     void HandlePrint(std::ostream& response);
-    void HandleStats(std::ostream& response);
+
+    DISALLOW_COPY_AND_ASSIGN(SimpleProtocol);
 };
 
 }  // namespace asparagus

@@ -26,8 +26,6 @@ set(ASPARAGUS_SOURCES
         randoms.h
         simple_protocol.cc
         simple_protocol.h
-        statistics.cc
-        statistics.h
-)
+        controller.h controller.cc)
 
 add_executable(asparagus ${ASPARAGUS_SOURCES})
