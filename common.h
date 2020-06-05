@@ -7,6 +7,8 @@
 
 namespace asparagus {
 
+#define COLLECT_STATISTICS 1
+
 #define DISALLOW_COPY_AND_ASSIGN(clazz) \
     clazz(const clazz&) = delete;       \
     clazz& operator =(const clazz&) = delete

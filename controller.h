@@ -6,6 +6,10 @@
 #include "board.h"
 #include "common.h"
 
+#ifdef COLLECT_STATISTICS
+#include <ostream>
+#endif  // COLLECT_STATISTICS
+
 namespace asparagus {
 
 class Config;
@@ -24,6 +28,9 @@ public:
     void SetCell(Cell cell, Stone stone);
     void PlayerMove(Cell move);
     Cell GetEngineMove();
+    #ifdef COLLECT_STATISTICS
+    void PrintStats(std::ostream& out);
+    #endif  // COLLECT_STATISTICS
 
 private:
     const Config& config_;

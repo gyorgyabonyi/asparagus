@@ -31,6 +31,7 @@ private:
     void HandleGet(const std::vector<std::string>& args, std::ostream& response);
     void HandleBoard(const std::vector<std::string>& args, std::ostream& response);
     void HandlePrint(std::ostream& response);
+    void HandleStats(std::ostream& response);
 
     DISALLOW_COPY_AND_ASSIGN(SimpleProtocol);
 };

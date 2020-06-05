@@ -5,6 +5,10 @@
 
 #include "common.h"
 
+#ifdef COLLECT_STATISTICS
+#include <ostream>
+#endif  // COLLECT_STATISTICS
+
 namespace asparagus {
 
 class Cache final {
@@ -34,6 +38,7 @@ public:
         uint64_t hash_;
         uint32_t type_       : 2;
         uint32_t depth_      : 8;
+        uint32_t age_        : 10;
         uint32_t best_move_  : 10;
         float value_;
 
@@ -47,10 +52,21 @@ public:
     void NewSearch();
     Entry* Find(uint64_t hash, bool* found);
 
+    #ifdef COLLECT_STATISTICS
+    void PrintStats(std::ostream& out);
+    #endif  // COLLECT_STATISTICS
+
 private:
     unsigned int ply_;
     uint64_t entry_num_;
     Entry* entries_;
+
+    #ifdef COLLECT_STATISTICS
+    uint64_t used_entries_;
+    uint64_t lookup_count_;
+    uint64_t collision_count_;
+    uint64_t hit_count_;
+    #endif  // COLLECT_STATISTICS
 
     DISALLOW_COPY_AND_ASSIGN(Cache);
 };

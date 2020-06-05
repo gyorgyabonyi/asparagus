@@ -56,6 +56,8 @@ bool SimpleProtocol::HandleRequest(std::istream& request, std::ostream& response
             HandleBoard(tokens, response);
         } else if (command == "print") {
             HandlePrint(response);
+        } else if (command == "stats") {
+            HandleStats(response);
         } else {
             response << "error: unknown command: " << command;
         }
@@ -207,6 +209,12 @@ void SimpleProtocol::HandlePrint(std::ostream& response) {
         }
         response << std::endl;
     }
+}
+
+void SimpleProtocol::HandleStats(std::ostream& response) {
+#ifdef COLLECT_STATISTICS
+    controller_->PrintStats(response);
+#endif   // COLLECT_STATISTICS
 }
 
 }  // namespace asparagus

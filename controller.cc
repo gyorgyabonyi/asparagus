@@ -15,6 +15,7 @@ Controller::Controller(const Config& config, Engine* engine)
 void Controller::Start(int width, int height) {
     board_.Initialize(width, height);
     engine_->Start();
+    state_ = kPlaying;
 }
 
 void Controller::SetCell(Cell cell, Stone stone) {
@@ -40,5 +41,11 @@ Cell Controller::GetEngineMove() {
     }
     return move;
 }
+
+#ifdef COLLECT_STATISTICS
+void Controller::PrintStats(std::ostream& out) {
+    engine_->PrintStats(out);
+}
+#endif  // COLLECT_STATISTICS
 
 }  // namespace asparagus

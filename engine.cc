@@ -24,6 +24,12 @@ void Engine::Start() {
 }
 
 Cell Engine::GetBestMove(Board* board) {
+    #ifdef COLLECT_STATISTICS
+    start_time_ = std::chrono::steady_clock::now();
+    node_count_ = 0;
+    eval_count_ = 0;
+    cutoff_count_ = 0;
+    #endif  // COLLECT_STATISTICS
     cache_.NewSearch();
     Cell best_move = MakeCell(0, 0);
     if (board->empty()) {
@@ -33,11 +39,35 @@ Cell Engine::GetBestMove(Board* board) {
             NegaMax(board, depth, -kInfinity, kInfinity, 1.0f, 2, &best_move);
         }
     }
+    #ifdef COLLECT_STATISTICS
+    auto end_time = std::chrono::steady_clock::now();
+    std::chrono::duration<double> duration = end_time - start_time_;
+    thinkig_time_ = duration.count();
+    #endif  // COLLECT_STATISTICS
+
     return best_move;
 }
 
+#ifdef COLLECT_STATISTICS
+void Engine::PrintStats(std::ostream& out) {
+    out << "engine stats:" << std::endl;
+    out << " thinking time: " << thinkig_time_ << std::endl;
+    out << " nodes        : " << node_count_ << std::endl;
+    out << " evals        : " << eval_count_ << std::endl;
+    out << " cutoff rate  : " << 100.0 * double(cutoff_count_) / double(node_count_) << std::endl;
+    out << " nodes/sec    : " << double(node_count_) / thinkig_time_ << std::endl;
+    out << " evals/sec    : " << double(eval_count_) / thinkig_time_ << std::endl;
+    out << std::endl;
+    cache_.PrintStats(out);
+}
+#endif  // COLLECT_STATISTICS
+
 float Engine::NegaMax(Board* node, int depth, float alpha, float beta, float color, int distance,
                       Cell* best_move) {
+    #ifdef COLLECT_STATISTICS
+    node_count_ += 1ull;
+    #endif  // COLLECT_STATISTICS
+
     const float original_alpha = alpha;
     bool found;
     Cache::Entry* entry = cache_.Find(node->hash(), &found);
@@ -82,6 +112,9 @@ float Engine::NegaMax(Board* node, int depth, float alpha, float beta, float col
             alpha = best_value;
         }
         if (alpha >= beta) {
+            #ifdef COLLECT_STATISTICS
+            cutoff_count_ += 1ull;
+            #endif  // COLLECT_STATISTICS
             break;
         }
     }
@@ -100,6 +133,9 @@ float Engine::NegaMax(Board* node, int depth, float alpha, float beta, float col
 
 float Engine::Evaluate(const Board* board) {
     static int kStrides[] = { Board::kUpRight, Board::kRight, Board::kDownRight, Board::kDown };
+    #ifdef COLLECT_STATISTICS
+    eval_count_ += 1ull;
+    #endif  // COLLECT_STATISTICS
     CellSet cells;
     board->GetCellsToEvaluate(3, &cells);
     float value = 0.0f;
