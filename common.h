@@ -7,9 +7,10 @@
 
 namespace asparagus {
 
-#define COLLECT_STATISTICS  1
-// #define USE_CACHE           1
-// #define ITERATIVE_DEEPENING 1
+#define COLLECT_STATISTICS      1
+#define AGGREGATED_STATISTICS   1
+// #define USE_CACHE               1
+// #define ITERATIVE_DEEPENING     1
 
 #define DISALLOW_COPY_AND_ASSIGN(clazz) \
     clazz(const clazz&) = delete;       \

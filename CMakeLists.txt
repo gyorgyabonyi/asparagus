@@ -17,7 +17,6 @@ set(ASPARAGUS_SOURCES
         engine.h
         gomocup_protocol.cc
         gomocup_protocol.h
-        main.cc
         patterns.cc
         patterns.h
         protocol.cc
@@ -26,6 +25,10 @@ set(ASPARAGUS_SOURCES
         randoms.h
         simple_protocol.cc
         simple_protocol.h
-        controller.h controller.cc)
+        controller.h
+        controller.cc
+)
 
-add_executable(asparagus ${ASPARAGUS_SOURCES})
+add_executable(asparagus main.cc ${ASPARAGUS_SOURCES})
+
+add_executable(testbench testbench.cc ${ASPARAGUS_SOURCES})

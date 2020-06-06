@@ -23,6 +23,11 @@ void Engine::Start() {
     #ifdef USE_CACHE
     cache_.Reset();
     #endif  // USE_CACHE
+    #ifdef AGGREGATED_STATISTICS
+    aggregated_node_count_ = 0;
+    aggregated_eval_count_ = 0;
+    aggregated_cutoff_count_ = 0;
+    #endif  // AGGREGATED_STATISTICS
 }
 
 Cell Engine::GetBestMove(Board* board) {
@@ -49,6 +54,11 @@ Cell Engine::GetBestMove(Board* board) {
     auto end_time = std::chrono::steady_clock::now();
     std::chrono::duration<double> duration = end_time - start_time_;
     thinkig_time_ = duration.count();
+    #ifdef AGGREGATED_STATISTICS
+    aggregated_node_count_ += node_count_;
+    aggregated_eval_count_ += eval_count_;
+    aggregated_cutoff_count_ += cutoff_count_;
+    #endif  // AGGREGATED_STATISTICS
     #endif  // COLLECT_STATISTICS
 
     return best_move;
@@ -65,6 +75,13 @@ void Engine::PrintStats(std::ostream& out) {
     out << " evals/sec    : " << double(eval_count_) / thinkig_time_ << std::endl;
     out << std::endl;
     cache_.PrintStats(out);
+
+    #ifdef AGGREGATED_STATISTICS
+    out << "aggregated stats:" << std::endl;
+    out << " nodes:        " << aggregated_node_count_ << std::endl;
+    out << " eval rate   : " << 100.0 * double(aggregated_eval_count_) / double(aggregated_node_count_) << std::endl;
+    out << " cutoff rate : " << 100.0 * double(aggregated_cutoff_count_) / double(aggregated_node_count_) << std::endl;
+    #endif  // AGGREGATED_STATISCTICS
 }
 #endif  // COLLECT_STATISTICS
 

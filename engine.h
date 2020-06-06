@@ -44,6 +44,11 @@ private:
     int cutoff_count_;
     std::chrono::time_point<std::chrono::steady_clock> start_time_;
     double thinkig_time_;
+    #ifdef AGGREGATED_STATISTICS
+    uint64_t aggregated_node_count_;
+    uint64_t aggregated_eval_count_;
+    uint64_t aggregated_cutoff_count_;
+    #endif  // AGGREGATED_STATISCTICS
     #endif  // COLLECT_STATISTICS
 
     float NegaMax(Board* node, int depth, float alpha, float beta, float color,
