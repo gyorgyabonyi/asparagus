@@ -26,6 +26,7 @@ public:
         constexpr uint8_t type() const { return type_; }
         constexpr uint8_t depth() const { return depth_; }
         constexpr float value() const { return value_; }
+        constexpr Cell best_move() const { return best_move_; }
 
         void Store(uint8_t type, uint8_t depth, float value, Cell best_move) {
             type_ = type & 0x3u;

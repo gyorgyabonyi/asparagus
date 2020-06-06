@@ -6,6 +6,7 @@
 #include "cell_set.h"
 #include "config.h"
 
+
 namespace asparagus {
 
 constexpr float kInfinity = std::numeric_limits<float>::infinity();
@@ -98,6 +99,7 @@ float Engine::NegaMax(Board* node, int depth, float alpha, float beta, float col
     if (found && entry->depth() >= depth) {
         uint8_t type = entry->type();
         if (type == Cache::Entry::kExact) {
+            *best_move = entry->best_move();
             return entry->value();
         } else if (type == Cache::Entry::kLowerBound) {
             alpha = std::max(alpha, entry->value());
@@ -105,6 +107,7 @@ float Engine::NegaMax(Board* node, int depth, float alpha, float beta, float col
             beta = std::min(beta, entry->value());
         }
         if (alpha >= beta) {
+            *best_move = entry->best_move();
             return entry->value();
         }
     }
@@ -115,12 +118,17 @@ float Engine::NegaMax(Board* node, int depth, float alpha, float beta, float col
     }
 
     CellSet moves;
+    Cell cached_best_move = entry->best_move();
+    if (found & node->IsEmptyCell(cached_best_move)) {
+        moves.insert(cached_best_move);
+    }
     node->GetPossibleMoves(distance, &moves);
     // TODO(gyorgy): order moves.
     float best_value = -kInfinity;
     Cell local_best_move = MakeCell(0, 0);
     const Stone stone = color > 0.0f ? kEngine : kPlayer;
     for (auto move : moves) {
+        // TODO(gyorgy): ignore the cached best move at second time.
         float value;
         if (node->IsTerminalMove(move, stone, config_.is_exact_five())) {
             value = -color * kWinValue;
@@ -129,6 +137,7 @@ float Engine::NegaMax(Board* node, int depth, float alpha, float beta, float col
             value = -NegaMax(node, depth - 1, -beta, -alpha, -color, 1, &local_best_move);
             node->Set(move, kEmpty);
         }
+
         if (value > best_value) {
             best_value = value;
             *best_move = move;
@@ -153,7 +162,7 @@ float Engine::NegaMax(Board* node, int depth, float alpha, float beta, float col
     } else {
         type = Cache::Entry::kExact;
     }
-    entry->Store(type, depth, best_value, local_best_move);
+    entry->Store(type, depth, best_value, *best_move);
     #endif  // USE_CACHE
 
     return best_value;
