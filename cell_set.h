@@ -5,27 +5,28 @@
 
 #include "common.h"
 
-#include <vector>
+#include <cassert>
 
 namespace asparagus {
 
 class CellSet final {
+    static constexpr int kMaxSize = 30 * 30;
 public:
-    using iterator = std::vector<Cell>::iterator;
+    using iterator = Cell*;
 
-    CellSet() = default;
+    CellSet() : size_(0) {}
 
-    iterator begin() { return cells_.begin(); }
-    iterator end() { return cells_.end(); }
+    constexpr iterator begin() { return cells_; }
+    constexpr iterator end() { return cells_ + size_; }
 
     constexpr void insert(Cell cell) {
-        cells_.push_back(cell);
+        assert(size_ < kMaxSize);
+        cells_[size_++] = cell;
     }
 
 private:
-    std::vector<Cell> cells_;
-
-    DISALLOW_COPY_AND_ASSIGN(CellSet);
+    int size_;
+    Cell cells_[kMaxSize];
 };
 
 }  // namespace asparagus
