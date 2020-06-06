@@ -2,6 +2,7 @@
 
 #include "board.h"
 
+#include <algorithm>
 #include <cstring>
 
 #include "cell_set.h"
@@ -22,16 +23,42 @@ Board::Board()
     :   width_(0),
         height_(0),
         hash_(0) {
-    memset(stones_, 0, kStorageSize);
+    memset(stones_, 0, sizeof(stones_));
+    memset(axes_, 0, sizeof(axes_));
 }
 
 void Board::Initialize(int width, int height) {
+    // static const int kStrides[4] = { kDownLeft, kLeft, kUpLeft, kUp };
+    static const int kStrides[8] = {
+        kDownLeft, kLeft, kUpLeft, kUp, kUpRight, kRight, kDownRight, kDown,
+    };
+
     width_ = width;
     height_ = height;
     hash_ = 0;
+
+    last_ = kStride * (height + 2) + 1;
+
     memset(stones_, kBoundary, kStorageSize);
+    memset(axes_, 0, sizeof(axes_));
     for (int y = 1; y <= height; y++) {
         memset(stones_ + MakeCell(1, y), kEmpty, width);
+    }
+    for (int y = 0; y < kStride; y++) {
+        for (int x = 0; x < kStride; x++) {
+            const Cell base = MakeCell(x, y);
+            if (!IsInside(base)) {
+                continue;
+            }
+            for (int stride = 0; stride < 8; stride++) {
+                Cell value = base + kStrides[stride];
+                const Stone* board = cell(base);
+                for (int i = 0; *board == kEmpty && i < kMaxAxisLength; i++) {
+                    axes_[base][stride][i] = value;
+                    value += kStrides[stride];
+                }
+            }
+        }
     }
 }
 
@@ -73,6 +100,19 @@ void Board::GetCellsToEvaluate(int dist, CellSet* cells) const {
     static const int kStrides[4] = { kDownLeft, kLeft, kUpLeft, kUp };
     uint8_t flags[kStorageSize];
     memset(flags, 0, sizeof(flags));
+
+    /*
+    for (Cell cell = kStride + 1; cell < last_; cell++) {
+        if (IsStone(stones_[cell])) {
+            for (int direction = 0; direction < 4; direction++) {
+                for (int i = 0; i < dist; i++) {
+                    flags[axes_[cell][direction][i]] = 1;
+                }
+            }
+        }
+    }
+    */
+
     for (int y = 1; y <= height_; y++) {
         for (int x = 1; x <= width_; x++) {
             const Cell base = MakeCell(x, y);
@@ -86,8 +126,9 @@ void Board::GetCellsToEvaluate(int dist, CellSet* cells) const {
             }
         }
     }
-    for (Cell cell = 0; cell < kStorageSize; cell++) {
-        if (flags[cell]) {
+
+    for (Cell cell = kStride + 1; cell < last_; cell++) {
+        if (flags[cell] && stones_[cell] != kBoundary) {
             cells->insert(cell);
         }
     }
@@ -96,18 +137,18 @@ void Board::GetCellsToEvaluate(int dist, CellSet* cells) const {
 void Board::GetPossibleMoves(int dist, CellSet* cells) const {
     uint8_t flags[kStorageSize];
     memset(flags, 0, sizeof(flags));
-    for (int y = 1; y <= height_; y++) {
-        for (int x = 1; x <= width_; x++) {
-            if (IsStone(stones_[MakeCell(x, y)])) {
-                for (int sy = std::max(1, y - dist); sy <= std::min(height_, y + dist); sy++) {
-                    for (int sx = std::max(1, x - dist); sx <= std::min(width_, x + dist); sx++) {
-                        flags[MakeCell(sx, sy)] = 1;
-                    }
+
+    for (Cell cell = kStride + 1; cell < last_; cell++) {
+        if (IsStone(stones_[cell])) {
+            for (int direction = 0; direction < 8; direction++) {
+                for (int i = 0; i < dist; i++) {
+                    flags[axes_[cell][direction][i]] = 1;
                 }
             }
         }
     }
-    for (Cell cell = 0; cell < kStorageSize; cell++) {
+
+    for (Cell cell = kStride + 1; cell < last_; cell++) {
         if (flags[cell] && !stones_[cell]) {
             cells->insert(cell);
         }

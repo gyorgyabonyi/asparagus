@@ -44,10 +44,16 @@ public:
     void GetPossibleMoves(int dist, CellSet* cells) const;
 
 private:
+    static constexpr int kMaxAxisLength = 5;
+
     int width_;
     int height_;
+
+    Cell last_;
+
     uint64_t hash_;
-    Stone stones_[kStride * kStride];
+    Stone stones_[kStorageSize];
+    Cell axes_[kStorageSize][8][kMaxAxisLength];
 
     DISALLOW_COPY_AND_ASSIGN(Board);
 };
