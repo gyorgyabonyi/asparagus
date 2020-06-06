@@ -20,7 +20,9 @@ Engine::Engine(const Config &config)
 }
 
 void Engine::Start() {
+    #ifdef USE_CACHE
     cache_.Reset();
+    #endif  // USE_CACHE
 }
 
 Cell Engine::GetBestMove(Board* board) {
@@ -35,9 +37,13 @@ Cell Engine::GetBestMove(Board* board) {
     if (board->empty()) {
         best_move = MakeCell(board->width() / 2, board->height() / 2);
     } else {
+        #ifdef ITERATIVE_DEEPENING
         for (int depth = 1; depth <= config_.max_depth(); depth++) {
             NegaMax(board, depth, -kInfinity, kInfinity, 1.0f, 2, &best_move);
         }
+        #else  // ITERATIVE_DEEPENING
+        NegaMax(board, config_.max_depth(), -kInfinity, kInfinity, 1.0f, 2, &best_move);
+        #endif  // ITERATIVE_DEEPENING
     }
     #ifdef COLLECT_STATISTICS
     auto end_time = std::chrono::steady_clock::now();
@@ -68,6 +74,7 @@ float Engine::NegaMax(Board* node, int depth, float alpha, float beta, float col
     node_count_ += 1ull;
     #endif  // COLLECT_STATISTICS
 
+    #ifdef USE_CACHE
     const float original_alpha = alpha;
     bool found;
     Cache::Entry* entry = cache_.Find(node->hash(), &found);
@@ -84,6 +91,7 @@ float Engine::NegaMax(Board* node, int depth, float alpha, float beta, float col
             return entry->value();
         }
     }
+    #endif  // USE_CACHE
 
     if (depth == 0) {
         return color * Evaluate(node);
@@ -119,6 +127,7 @@ float Engine::NegaMax(Board* node, int depth, float alpha, float beta, float col
         }
     }
 
+    #ifdef USE_CACHE
     uint8_t type;
     if (best_value <= original_alpha) {
         type = Cache::Entry::kUpperBound;
@@ -128,6 +137,8 @@ float Engine::NegaMax(Board* node, int depth, float alpha, float beta, float col
         type = Cache::Entry::kExact;
     }
     entry->Store(type, depth, best_value, local_best_move);
+    #endif  // USE_CACHE
+
     return best_value;
 }
 
